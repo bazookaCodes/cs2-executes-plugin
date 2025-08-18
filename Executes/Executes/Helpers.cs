@@ -4,6 +4,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Utils;
+using Executes.Enums;
 using Executes.Models.JsonConverters;
 
 namespace Executes
@@ -239,6 +240,25 @@ namespace Executes
             }
 
             Server.ExecuteCommand("exec cs2-executes/executes.cfg");
+        }
+
+        public static void GivePlayerGrenade(CCSPlayerController player, EGrenade grenade)
+        {
+            switch (grenade)
+            {
+                case EGrenade.Smoke:
+                    player.GiveNamedItem(CsItem.Smoke); break;
+                case EGrenade.Flashbang:
+                    player.GiveNamedItem(CsItem.Flashbang); break;
+                case EGrenade.Incendiary:
+                    player.GiveNamedItem(CsItem.Incendiary); break;
+                case EGrenade.HighExplosive:
+                    player.GiveNamedItem(CsItem.HEGrenade); break;
+                case EGrenade.Molotov:
+                    player.GiveNamedItem(CsItem.Molotov); break;
+                case EGrenade.Decoy:
+                    player.GiveNamedItem(CsItem.Decoy); break;
+            }
         }
     }
 }

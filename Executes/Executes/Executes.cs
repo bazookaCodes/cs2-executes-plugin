@@ -3,13 +3,13 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Executes.Configs;
 using Executes.Enums;
 using Executes.Managers;
 using Executes.Models;
-using System.ComponentModel.DataAnnotations;
 
 namespace Executes
 {
@@ -82,11 +82,6 @@ namespace Executes
             {
                 Helpers.ExecuteExecutesConfiguration(ModuleDirectory);
             }, TimerFlags.STOP_ON_MAPCHANGE);
-
-            // Manually set time while testing to not count down
-            Server.ExecuteCommand("mp_warmup_start");
-            Server.ExecuteCommand("mp_warmuptime 120");
-            Server.ExecuteCommand("mp_warmup_pausetimer 1");
         }
 
         public void OnEntitySpawnedHandler(CEntityInstance entity)
@@ -115,20 +110,21 @@ namespace Executes
                 Vector velocity = new(projectile.AbsVelocity.X, projectile.AbsVelocity.Y, projectile.AbsVelocity.Z);
                 EGrenade nadeType = (EGrenade)entity.Entity.DesignerName.DesignerNameToEnum();
 
-                lastGrenade = new Grenade(
-                    0,
-                    "last_grenade",
-                    player.Team,
-                    position,
-                    angle,
-                    velocity,
-                    player.PlayerPawn.Value.CBodyComponent!.SceneNode!.AbsOrigin,
-                    player.PlayerPawn.Value.EyeAngles,
-                    nadeType,
-                    DateTime.Now
-                );
+                lastGrenade = new Grenade {
+                    Id = 0,
+                    Name = "last_grenade",
+                    Type = nadeType,
+                    Position = position,
+                    Angle = angle,
+                    Velocity = velocity,
+                    Team = player.Team,
+                    Delay = 0
+                };
 
                 player.ChatMessage(lastGrenade.ToString());
+
+                //Replace the grenade since we're in debug mode
+                Helpers.GivePlayerGrenade(player, nadeType);
             });
         }
 
@@ -529,6 +525,13 @@ namespace Executes
         public void OnToggleDevCommand(CCSPlayerController? player, CommandInfo commandInfo)
         {
             inDevMode = !inDevMode;
+
+            Server.ExecuteCommand("mp_warmup_start");
+            Server.ExecuteCommand("mp_warmuptime 120");
+            Server.ExecuteCommand("mp_warmup_pausetimer 1");
+            Server.ExecuteCommand("sv_infinite_ammo 1");
+
+            //TODO figure out how to either do unlimited ammo or regive nades when thrown in warmup
 
             player?.ChatMessage($"Dev mode is now {inDevMode}");
         }

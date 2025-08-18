@@ -60,6 +60,17 @@ namespace Executes.Managers
 
         private static void AllocateGrenades(CCSPlayerController player)
         {
+            if (Helpers.IsWarmup())
+            {
+                //Give everyone full nades during warmup
+                player?.GiveNamedItem(CsItem.SmokeGrenade);
+                player?.GiveNamedItem(CsItem.FlashbangGrenade);
+                player?.GiveNamedItem(CsItem.Molotov);
+                player?.GiveNamedItem(CsItem.HEGrenade);
+
+                return;
+            }
+
             switch (new Random().Next(4))
             {
                 case 0:

@@ -10,44 +10,21 @@ namespace Executes.Models
     public class Grenade
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
+        public EGrenade Type { get; set; }
+        
+        [JsonConverter(typeof(VectorJsonConverter))]
+        public Vector? Position { get; set; }
+
+        [JsonConverter(typeof(QAngleJsonConverter))]
+        public QAngle? Angle { get; set; }
+
+        [JsonConverter(typeof(VectorJsonConverter))]
+        public Vector? Velocity { get;  set; }
+
         public CsTeam Team { get; set; }
 
-        [JsonConverter(typeof(VectorJsonConverter))]
-        public Vector Position { get; private set; }
-
-        [JsonConverter(typeof(QAngleJsonConverter))]
-        public QAngle Angle { get; private set; }
-
-        [JsonConverter(typeof(VectorJsonConverter))]
-        public Vector Velocity { get; private set; }
-
-        [JsonConverter(typeof(VectorJsonConverter))]
-        public Vector PlayerPosition { get; private set; }
-
-        [JsonConverter(typeof(QAngleJsonConverter))]
-        public QAngle PlayerAngle { get; private set; }
-
-        public EGrenade Type { get; private set; }
-
-        public DateTime ThrownTime { get; private set; }
-
         public float Delay { get; set; }
-
-        public Grenade(int grenadeId, string grenadeName, CsTeam grenadeTeam, Vector nadePosition, QAngle nadeAngle, Vector nadeVelocity, Vector playerPosition, QAngle playerAngle, EGrenade grenadeType, DateTime thrownTime)
-        {
-            Id = grenadeId;
-            Name = grenadeName;
-            Team = grenadeTeam;
-            Position = new Vector(nadePosition.X, nadePosition.Y, nadePosition.Z);
-            Angle = new QAngle(nadeAngle.X, nadeAngle.Y, nadeAngle.Z);
-            Velocity = new Vector(nadeVelocity.X, nadeVelocity.Y, nadeVelocity.Z);
-            PlayerPosition = new Vector(playerPosition.X, playerPosition.Y, playerPosition.Z);
-            PlayerAngle = new QAngle(playerAngle.X, playerAngle.Y, playerAngle.Z);
-            Type = grenadeType;
-            ThrownTime = thrownTime;
-            Delay = 0;
-        }
 
         public void Throw()
         {
@@ -96,7 +73,7 @@ namespace Executes.Models
 
         public override string ToString()
         {
-            return $"Position: {Position}{Environment.NewLine}Angle: {Angle}{Environment.NewLine}Player Position: {PlayerPosition}{Environment.NewLine}Player Angle: {PlayerAngle}{Environment.NewLine}Type: {Type}{Environment.NewLine}Delay: {Delay}";
+            return $"Position: {Position}Angle: {Angle} Velocity: {Velocity}Type: {Type}Delay: {Delay}";
         }
     }
 }
