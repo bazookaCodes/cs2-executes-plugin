@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -10,6 +11,7 @@ using Executes.Configs;
 using Executes.Enums;
 using Executes.Managers;
 using Executes.Models;
+using System;
 
 namespace Executes
 {
@@ -540,6 +542,69 @@ namespace Executes
             player.ChatMessage("Last grenade:");
             player.ChatMessage(lastGrenade.ToString());
             AddTimer(lastGrenade.Delay, () => lastGrenade.Throw());
+        }
+
+        [ConsoleCommand("css_throw", "Throws the specified name.")]
+        [CommandHelper(minArgs: 1, usage: "The name of the grenade to throw.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandThrowGrenade(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode || !player.IsValidPlayer())
+            {
+                player.ChatMessage("Command only available in debug mode.");
+            }
+
+            string grenadeName = commandInfo.ArgString.ToUpper();
+            Grenade? targetGrenade = gameManager._mapConfig.Grenades.Where(g => g.Name.ToUpper() == grenadeName).FirstOrDefault();
+
+            if (targetGrenade == null)
+            {
+                commandInfo.ReplyToCommand($"[Executes] No matching grenade found.");
+                return;
+            }
+
+            player.ChatMessage($"Throwing grenade {targetGrenade.Name}.");
+            AddTimer(targetGrenade.Delay, () => targetGrenade.Throw());
+        }
+
+        [ConsoleCommand("css_throwclosest", "Throws the closest grenade")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandThrowClosestGrenade(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode || !player.IsValidPlayer())
+            {
+                player.ChatMessage("Command only available in debug mode.");
+            }
+
+            if (gameManager._mapConfig.Grenades.Count == 0)
+            {
+                player.ChatMessage("No grenades exist.");
+            }
+
+            var closestDistance = 9999.9;
+            Grenade? closestNade = null;
+
+            foreach (Grenade grenade in gameManager._mapConfig.Grenades)
+            {
+                var distance = Helpers.GetDistanceBetweenVectors(grenade.Position, player!.PlayerPawn.Value!.AbsOrigin!);
+
+                if (distance > 128.0 || distance > closestDistance)
+                {
+                    continue;
+                }
+
+                closestDistance = distance;
+                closestNade = grenade;
+            }
+
+            if (closestNade == null)
+            {
+                commandInfo.ReplyToCommand($"[Executes] No grenades found within 128 units.");
+                return;
+            }
+
+            player.ChatMessage($"Throwing grenade {closestNade.Name}.");
+            AddTimer(closestNade.Delay, () => closestNade.Throw());
         }
 
         [ConsoleCommand("css_showspawns", "Creates visuals on the map to show all spawns.")]
