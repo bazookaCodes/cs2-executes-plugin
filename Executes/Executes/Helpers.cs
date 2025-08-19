@@ -1,11 +1,13 @@
-﻿using System.Text;
-using System.Text.Json;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Utils;
 using Executes.Enums;
+using Executes.Models;
 using Executes.Models.JsonConverters;
+using System.Drawing;
+using System.Text;
+using System.Text.Json;
 
 namespace Executes
 {
@@ -172,6 +174,41 @@ namespace Executes
             }
 
             return shuffledList;
+        }
+        public static int ShowSpawns(List<Spawn> spawns)
+        {
+            foreach (var spawn in spawns)
+            {
+                ShowSpawn(spawn);
+            }
+
+            Server.PrintToChatAll($"[Executes] Showing {spawns.Count} spawns.");
+            return spawns.Count;
+        }
+
+        public static void ShowSpawn(Spawn spawn)
+        {
+            var beam = Utilities.CreateEntityByName<CBeam>("beam") ?? throw new Exception("Failed to create beam entity.");
+            beam.StartFrame = 0;
+            beam.FrameRate = 0;
+            beam.LifeState = 1;
+            beam.Width = 5;
+            beam.EndWidth = 5;
+            beam.Amplitude = 0;
+            beam.Speed = 50;
+            beam.Flags = 0;
+            beam.BeamType = BeamType_t.BEAM_HOSE;
+            beam.FadeLength = 10.0f;
+
+            var color = spawn.Team == CsTeam.Terrorist ? Color.Red : Color.Blue;
+            beam.Render = Color.FromArgb(255, color);
+
+            beam.EndPos.X = spawn.Position.X;
+            beam.EndPos.Y = spawn.Position.Y;
+            beam.EndPos.Z = spawn.Position.Z + 100.0f;
+
+            beam.Teleport(spawn.Position, new QAngle(IntPtr.Zero), new Vector(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero));
+            beam.DispatchSpawn();
         }
 
         private const string ExecutesCfgDirectory = "/../../../../cfg/cs2-executes";

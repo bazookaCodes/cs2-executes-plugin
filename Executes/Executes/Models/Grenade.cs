@@ -73,7 +73,7 @@ namespace Executes.Models
 
         public override string ToString()
         {
-            return $"Position: {Position}Angle: {Angle} Velocity: {Velocity}Type: {Type}Delay: {Delay}";
+            return $"Type: {Type} Position: {Position} Angle: {Angle} Velocity: {Velocity}Delay: {Delay}";
         }
     }
 }

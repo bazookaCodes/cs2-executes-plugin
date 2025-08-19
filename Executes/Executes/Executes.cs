@@ -469,10 +469,10 @@ namespace Executes
             }
 
             Console.WriteLine("[Executes] EventHandler::OnRoundStart");
-
             if (Helpers.IsWarmup())
             {
-                Console.WriteLine("[Executes] Warmup detected, skipping.");
+                Console.WriteLine("[Executes] Warmup detected, drawing spawns and starting dev mode.");
+                Helpers.ShowSpawns(gameManager._mapConfig.Spawns);
                 return HookResult.Continue;
             }
 
@@ -484,7 +484,6 @@ namespace Executes
             var currentScenario = gameManager.GetCurrentScenario();
             spawnManager.SetupSpawns(currentScenario);
             grenadeManager.SetupGrenades(currentScenario);
-
 
             if (currentScenario.Bombsite == EBombsite.UNKNOWN)
             {
