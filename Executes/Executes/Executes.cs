@@ -471,8 +471,7 @@ namespace Executes
             Console.WriteLine("[Executes] EventHandler::OnRoundStart");
             if (Helpers.IsWarmup())
             {
-                Console.WriteLine("[Executes] Warmup detected, drawing spawns and starting dev mode.");
-                Helpers.ShowSpawns(gameManager._mapConfig.Spawns);
+                Console.WriteLine("[Executes] Warmup detected, skipping.");
                 return HookResult.Continue;
             }
 
@@ -528,9 +527,6 @@ namespace Executes
             Server.ExecuteCommand("mp_warmup_start");
             Server.ExecuteCommand("mp_warmuptime 120");
             Server.ExecuteCommand("mp_warmup_pausetimer 1");
-            Server.ExecuteCommand("sv_infinite_ammo 1");
-
-            //TODO figure out how to either do unlimited ammo or regive nades when thrown in warmup
 
             player?.ChatMessage($"Dev mode is now {inDevMode}");
         }
@@ -544,6 +540,60 @@ namespace Executes
             player.ChatMessage("Last grenade:");
             player.ChatMessage(lastGrenade.ToString());
             AddTimer(lastGrenade.Delay, () => lastGrenade.Throw());
+        }
+
+        [ConsoleCommand("css_showspawns", "Creates visuals on the map to show all spawns.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandShowSpawns(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode || !player.IsValidPlayer())
+            {
+                player.ChatMessage("Command only available in debug mode.");
+            }
+
+            var count = Helpers.ShowSpawns(gameManager._mapConfig.Spawns);
+            player.ChatMessage($"Showing {count} spawns.");
+        }
+
+        [ConsoleCommand("css_shownades", "Creates visuals on the map to show all nades.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandShowNades(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode || !player.IsValidPlayer())
+            {
+                player.ChatMessage("Command only available in debug mode.");
+            }
+
+            var count = Helpers.ShowNades(gameManager._mapConfig.Grenades);
+            player.ChatMessage($"Showing {count} nades.");
+        }
+
+        [ConsoleCommand("css_runscenario", "Runs a specified scenario by ID.")]
+        [CommandHelper(minArgs: 1, usage: "The name of the scenario to run.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandRunScenario(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode || !player.IsValidPlayer())
+            {
+                player.ChatMessage("Command only available in debug mode.");
+            }
+
+            string scenarioName = commandInfo.ArgString.ToUpper();
+            Scenario? targetScenario = gameManager._mapConfig.Scenarios.Where(s => s.Name.ToUpper() == scenarioName).FirstOrDefault();
+
+            if (targetScenario == null)
+            {
+                commandInfo.ReplyToCommand($"[Executes] No matching scenario found.");
+                return;
+            }
+
+            player.ChatMessage($"Executing scenario {targetScenario.Name}");
+
+            foreach (Grenade grenade in targetScenario.Grenades[CsTeam.Terrorist])
+            {
+                player.ChatMessage($"Throwing grenade {grenade.Name}.");
+                AddTimer(grenade.Delay, () => grenade.Throw());
+            }
         }
 
         [ConsoleCommand("css_getpos", "Prints the current position to the console")]

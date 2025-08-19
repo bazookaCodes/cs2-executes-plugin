@@ -175,6 +175,7 @@ namespace Executes
 
             return shuffledList;
         }
+
         public static int ShowSpawns(List<Spawn> spawns)
         {
             foreach (var spawn in spawns)
@@ -182,7 +183,6 @@ namespace Executes
                 ShowSpawn(spawn);
             }
 
-            Server.PrintToChatAll($"[Executes] Showing {spawns.Count} spawns.");
             return spawns.Count;
         }
 
@@ -208,6 +208,64 @@ namespace Executes
             beam.EndPos.Z = spawn.Position.Z + 100.0f;
 
             beam.Teleport(spawn.Position, new QAngle(IntPtr.Zero), new Vector(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero));
+            beam.DispatchSpawn();
+        }
+
+        public static int ShowNades(List<Grenade> grenades)
+        {
+            foreach (var grenade in grenades)
+            {
+                ShowNade(grenade);
+            }
+
+            return grenades.Count;
+        }
+
+        public static void ShowNade(Grenade grenade)
+        {
+            var beam = Utilities.CreateEntityByName<CBeam>("beam") ?? throw new Exception("Failed to create beam entity.");
+            beam.StartFrame = 0;
+            beam.FrameRate = 0;
+            beam.LifeState = 1;
+            beam.Width = 5;
+            beam.EndWidth = 5;
+            beam.Amplitude = 0;
+            beam.Speed = 50;
+            beam.Flags = 0;
+            beam.BeamType = BeamType_t.BEAM_HOSE;
+            beam.FadeLength = 10.0f;
+
+            var color = Color.White;
+
+            switch (grenade.Type)
+            {
+                case EGrenade.Smoke:
+                    color = Color.DarkGray;
+                    break;
+                case EGrenade.HighExplosive:
+                    color = Color.Green;
+                    break;
+                case EGrenade.Incendiary:
+                    color = Color.Orange;
+                    break;
+                case EGrenade.Molotov: 
+                    color = Color.Orange;
+                    break;
+                case EGrenade.Flashbang:
+                    color = Color.White;
+                    break;
+                case EGrenade.Decoy:
+                    color = Color.Black;
+                    break;
+            }
+
+            beam.Render = Color.FromArgb(255, color);
+
+            beam.EndPos.X = grenade.Position.X;
+            beam.EndPos.Y = grenade.Position.Y;
+            beam.EndPos.Z = grenade.Position.Z + 100.0f;
+
+            beam.Teleport(grenade.Position, new QAngle(IntPtr.Zero), new Vector(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero));
             beam.DispatchSpawn();
         }
 
