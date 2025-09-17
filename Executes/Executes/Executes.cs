@@ -46,7 +46,6 @@ namespace Executes
             queueManager = new QueueManager();
             spawnManager = new SpawnManager();
             grenadeManager = new GrenadeManager();
-            gameManager = new GameManager(queueManager);
 
             Console.WriteLine("Executes loaded.");
 
@@ -71,8 +70,9 @@ namespace Executes
         }
 
         private void OnMapStart(string map)
-        {
-            var loaded = gameManager!.LoadSpawns(ModuleDirectory, map);
+        {   
+            gameManager = new GameManager(queueManager, ModuleDirectory, map);
+            var loaded = gameManager!.LoadSpawns();
 
             if (!loaded)
             {
@@ -531,6 +531,300 @@ namespace Executes
             Server.ExecuteCommand("mp_warmup_pausetimer 1");
 
             player?.ChatMessage($"Dev mode is now {inDevMode}");
+        }
+
+        [ConsoleCommand("css_addspawn", "Creates a new spawn for the bombsite currently shown.")]
+        [CommandHelper(minArgs: 2, usage: "[Name] [T/CT]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandAddSpawn(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                return;
+            }
+
+            if (gameManager == null)
+            {
+                commandInfo.ReplyToCommand($"Spawn manager is not loaded.");
+                return;
+            }
+
+            if (!player.IsValidPlayer())
+            {
+                commandInfo.ReplyToCommand($"You must have an alive player pawn.");
+                return;
+            }
+
+            var name = commandInfo.GetArg(1);
+
+            var spawnTeam = commandInfo.GetArg(2).ToUpper();
+            CsTeam team = new CsTeam();
+            if (spawnTeam == "T")
+            {
+                team = CsTeam.Terrorist;
+            }
+            else if (spawnTeam == "CT")
+            {
+                team = CsTeam.CounterTerrorist;
+            }
+            else
+            {
+                commandInfo.ReplyToCommand($"You must specify a team [T / CT] - [Value: {spawnTeam}].");
+                return;
+            }
+
+            var spawns = gameManager._mapConfig.Spawns;
+
+            var closestDistance = 9999.9;
+
+            foreach (var spawn in spawns)
+            {
+                var distance = Helpers.GetDistanceBetweenVectors(spawn.Position, player!.PlayerPawn.Value!.AbsOrigin!);
+
+                if (distance > 128.0 || distance > closestDistance)
+                {
+                    continue;
+                }
+
+                closestDistance = distance;
+            }
+
+            if (closestDistance <= 72)
+            {
+                commandInfo.ReplyToCommand($"You are too close to another spawn, move away and try again.");
+                return;
+            }
+
+            var newSpawn = new Spawn {
+                Id = gameManager._mapConfig.Spawns.Count + 1,
+                Name = name,
+                Position =  player!.PlayerPawn.Value!.AbsOrigin!,
+                Angle = player!.PlayerPawn.Value!.AbsRotation!,
+                Team = team,
+                Type = ESpawnType.SPAWNTYPE_NORMAL
+            };
+            Helpers.ShowSpawn(newSpawn);
+
+            var spawnAdded = gameManager.AddSpawn(newSpawn);
+            if (spawnAdded)
+            {
+                commandInfo.ReplyToCommand("[Executes] Spawn added.");
+            }
+            else
+            {
+                commandInfo.ReplyToCommand("[Executes] Error adding spawn.");
+            }
+        }
+
+        [ConsoleCommand("css_addnade", "Saves the last nade thrown into the map config.")]
+        [CommandHelper(minArgs: 2, usage: "[Name] [Delay (Seconds)]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandAddNade(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                return;
+            }
+
+            if (gameManager == null)
+            {
+                commandInfo.ReplyToCommand($"Spawn manager is not loaded.");
+                return;
+            }
+
+            if (!player.IsValidPlayer())
+            {
+                commandInfo.ReplyToCommand($"You must have an alive player pawn.");
+                return;
+            }
+
+            var name = commandInfo.GetArg(1);
+            var delay = float.Parse(commandInfo.GetArg(2));
+
+            var newGrenade = new Grenade
+            {
+                Id = gameManager._mapConfig.Grenades.Count + 1,
+                Name = name,
+                Type = lastGrenade.Type,
+                Position = lastGrenade.Position,
+                Angle = lastGrenade.Angle,
+                Velocity = lastGrenade.Velocity,
+                Team = lastGrenade.Team,
+                Delay = delay
+            };
+            Helpers.ShowNade(newGrenade);
+
+            var spawnAdded = gameManager.AddSpawn(newGrenade);
+            if (spawnAdded)
+            {
+                commandInfo.ReplyToCommand("[Executes] Grenade added.");
+            }
+            else
+            {
+                commandInfo.ReplyToCommand("[Executes] Error adding grenade.");
+            }
+        }
+
+        [ConsoleCommand("css_removespawn", "Removes the closest spawn.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandRemoveSpawn(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                return;
+            }
+
+            if (gameManager == null)
+            {
+                commandInfo.ReplyToCommand($"Spawn manager is not loaded.");
+                return;
+            }
+
+            if (!player.IsValidPlayer())
+            {
+                commandInfo.ReplyToCommand($"You must have an alive player pawn.");
+                return;
+            }
+
+            if (gameManager._mapConfig.Spawns.Count == 0)
+            {
+                commandInfo.ReplyToCommand($"No spawns found.");
+                return;
+            }
+
+            var closestDistance = 9999.9;
+            Spawn? closestSpawn = null;
+
+            foreach (var spawn in gameManager._mapConfig.Spawns)
+            {
+                var distance = Helpers.GetDistanceBetweenVectors(spawn.Position, player!.PlayerPawn.Value!.AbsOrigin!);
+
+                if (distance > 128.0 || distance > closestDistance)
+                {
+                    continue;
+                }
+
+                closestDistance = distance;
+                closestSpawn = spawn;
+            }
+
+            if (closestSpawn == null)
+            {
+                commandInfo.ReplyToCommand($"No spawns found within 128 units.");
+                return;
+            }
+
+            // Remove the beam entity that is showing for the closest spawn.
+            var beamEntities = Utilities.FindAllEntitiesByDesignerName<CBeam>("beam");
+            foreach (var beamEntity in beamEntities)
+            {
+                if (beamEntity.AbsOrigin == null)
+                {
+                    continue;
+                }
+
+                if (
+                    beamEntity.AbsOrigin.Z - closestSpawn.Position.Z == 0 &&
+                    beamEntity.AbsOrigin.X - closestSpawn.Position.X == 0 &&
+                    beamEntity.AbsOrigin.Y - closestSpawn.Position.Y == 0
+                )
+                {
+                    beamEntity.Remove();
+                }
+            }
+
+            var spawnRemoved = gameManager.RemoveSpawn(closestSpawn);
+            if (spawnRemoved)
+            {
+                commandInfo.ReplyToCommand("Spawn removed.");
+            }
+            else
+            {
+                commandInfo.ReplyToCommand("Error removing spawn.");
+            }
+        }
+
+        [ConsoleCommand("css_removenade", "Removes the closest nade.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandRemoveNade(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                return;
+            }
+
+            if (gameManager == null)
+            {
+                commandInfo.ReplyToCommand($"Spawn manager is not loaded.");
+                return;
+            }
+
+            if (!player.IsValidPlayer())
+            {
+                commandInfo.ReplyToCommand($"You must have an alive player pawn.");
+                return;
+            }
+
+            if (gameManager._mapConfig.Grenades.Count == 0)
+            {
+                commandInfo.ReplyToCommand($"No grenades found.");
+                return;
+            }
+
+            var closestDistance = 9999.9;
+            Grenade? closestGrenade = null;
+
+            foreach (var grenade in gameManager._mapConfig.Grenades)
+            {
+                var distance = Helpers.GetDistanceBetweenVectors(grenade.Position, player!.PlayerPawn.Value!.AbsOrigin!);
+
+                if (distance > 128.0 || distance > closestDistance)
+                {
+                    continue;
+                }
+
+                closestDistance = distance;
+                closestGrenade = grenade;
+            }
+
+            if (closestGrenade == null)
+            {
+                commandInfo.ReplyToCommand($"No grenades found within 128 units.");
+                return;
+            }
+
+            // Remove the beam entity that is showing for the closest spawn.
+            var beamEntities = Utilities.FindAllEntitiesByDesignerName<CBeam>("beam");
+            foreach (var beamEntity in beamEntities)
+            {
+                if (beamEntity.AbsOrigin == null)
+                {
+                    continue;
+                }
+
+                if (
+                    beamEntity.AbsOrigin.Z - closestGrenade.Position.Z == 0 &&
+                    beamEntity.AbsOrigin.X - closestGrenade.Position.X == 0 &&
+                    beamEntity.AbsOrigin.Y - closestGrenade.Position.Y == 0
+                )
+                {
+                    beamEntity.Remove();
+                }
+            }
+
+            var spawnRemoved = gameManager.RemoveSpawn(closestGrenade);
+            if (spawnRemoved)
+            {
+                commandInfo.ReplyToCommand("Spawn removed.");
+            }
+            else
+            {
+                commandInfo.ReplyToCommand("Error removing spawn.");
+            }
         }
 
         [ConsoleCommand("css_rethrow", "Rethrows the last grenade thrown.")]

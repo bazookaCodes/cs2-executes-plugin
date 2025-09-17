@@ -20,22 +20,97 @@ namespace Executes.Managers
         private readonly int _consecutiveRoundWinsToScramble;
         private readonly bool _isScrambleEnabled;
 
+        private string moduleDirectory;
+        private string map;
+
         public const int ScoreForKill = 50;
         public const int ScoreForAssist = 25;
         public const int ScoreForDefuse = 50;
 
         private bool _scrambleNextRound;
 
-        public GameManager(QueueManager queueManager)
+        public GameManager(QueueManager queueManager, string _moduleDirectory, string _map)
         {
             _queueManager = queueManager;
+            moduleDirectory = _moduleDirectory;
+            map = _map;
 
             // TODO: Add a config option for this logic
             _consecutiveRoundWinsToScramble = 3;
             _isScrambleEnabled = true;
         }
 
-        public bool LoadSpawns(string moduleDirectory, string map)
+        public bool AddSpawn(Spawn spawn)
+        {
+            _mapConfig ??= new MapConfig();
+
+            if (_mapConfig.Spawns.Any(existingSpawn => existingSpawn.Position == spawn.Position && existingSpawn.Name == spawn.Name))
+            {
+                return false;
+            }
+
+            _mapConfig.Spawns.Add(spawn);
+
+            SaveSpawns();
+            LoadSpawns();
+
+            return true;
+        }
+
+        public bool AddSpawn(Grenade grenade)
+        {
+            _mapConfig ??= new MapConfig();
+
+            if (_mapConfig.Spawns.Any(existingSpawn => existingSpawn.Position == grenade.Position && existingSpawn.Name == grenade.Name))
+            {
+                return false;
+            }
+
+            _mapConfig.Grenades.Add(grenade);
+
+            SaveSpawns();
+            LoadSpawns();
+
+            return true;
+        }
+
+        public bool RemoveSpawn(Spawn spawn)
+        {
+            _mapConfig ??= new MapConfig();
+
+            if (!_mapConfig.Spawns.Any(existingSpawn =>
+                    existingSpawn.Position == spawn.Position))
+            {
+                return false; // Spawn doesn't exist, avoid removing
+            }
+
+            _mapConfig.Spawns.Remove(spawn);
+
+            SaveSpawns();
+            LoadSpawns();
+
+            return true;
+        }
+
+        public bool RemoveSpawn(Grenade grenade)
+        {
+            _mapConfig ??= new MapConfig();
+
+            if (!_mapConfig.Spawns.Any(existingSpawn =>
+                    existingSpawn.Position == grenade.Position))
+            {
+                return false; // Spawn doesn't exist, avoid removing
+            }
+
+            _mapConfig.Grenades.Remove(grenade);
+
+            SaveSpawns();
+            LoadSpawns();
+
+            return true;
+        }
+
+        public bool LoadSpawns()
         {
             var fileName = $"{map}.json";
 
@@ -78,6 +153,59 @@ namespace Executes.Managers
             Console.WriteLine($"-------------------------- Loaded {_mapConfig.Scenarios?.Count} executes config.");
 
             return true;
+        }
+
+        private void SaveSpawns()
+        {
+            var fileName = $"{map}.json";
+
+            // Path.Exists
+            string _mapConfigDirectory = Path.Combine(moduleDirectory, "map_config");
+            string _mapConfigPath = Path.Combine(_mapConfigDirectory, fileName);
+
+            var jsonString = JsonSerializer.Serialize(GetSanitisedMapConfig(), Helpers.JsonSerializerOptions);
+
+            try
+            {
+                if (!Directory.Exists(_mapConfigDirectory))
+                {
+                    Directory.CreateDirectory(_mapConfigDirectory);
+                }
+
+                File.WriteAllText(_mapConfigPath, jsonString);
+
+                Console.WriteLine($"Data has been written to {_mapConfigPath}");
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine($"An error occurred while writing to the file: {e.Message}");
+            }
+        }
+
+        private MapConfig GetSanitisedMapConfig()
+        {
+            if (_mapConfig == null)
+            {
+                throw new Exception("Map config data is null");
+            }
+
+            // Remove any duplicates in the lists
+            _mapConfig.Scenarios = _mapConfig.Scenarios
+                .GroupBy(scenario => new { scenario.Name })
+                .Select(group => group.First())
+                .ToList();
+
+            _mapConfig.Spawns = _mapConfig.Spawns
+                .GroupBy(spawn => new { spawn.Position })
+                .Select(group => group.First())
+                .ToList();
+
+            _mapConfig.Grenades = _mapConfig.Grenades
+                .GroupBy(grenade => new { grenade.Name, grenade.Position })
+                .Select(group => group.First())
+                .ToList();
+
+            return _mapConfig;
         }
 
         public Scenario? GetRandomScenario()
