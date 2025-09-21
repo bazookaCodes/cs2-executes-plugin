@@ -96,7 +96,7 @@ namespace Executes.Managers
         {
             _mapConfig ??= new MapConfig();
 
-            if (!_mapConfig.Spawns.Any(existingSpawn =>
+            if (!_mapConfig.Grenades.Any(existingSpawn =>
                     existingSpawn.Position == grenade.Position))
             {
                 return false; // Spawn doesn't exist, avoid removing
@@ -122,33 +122,42 @@ namespace Executes.Managers
 
             if (!File.Exists(_mapConfigPath))
             {
-                Console.WriteLine($"[Executes] {fileName} does not exist.");
-                _mapConfig = null;
-                return false;
+                Console.WriteLine($"[Executes] {fileName} does not exist. Creating ...");
+
+                _mapConfig = new MapConfig
+                {
+                    Spawns = new List<Spawn>(),
+                    Grenades = new List<Grenade>(),
+                    Scenarios = new List<Scenario>()
+                };
+
+                SaveSpawns();
             }
-
-            var config = File.ReadAllText(_mapConfigPath);
-
-            MapConfig? parsedConfig = null;
-            try
+            else
             {
-                parsedConfig = JsonSerializer.Deserialize<MapConfig>(config, Helpers.JsonSerializerOptions);
-            }
-            catch (JsonException exc)
-            {
-                Console.WriteLine($"[Executes] Failed parsing map config JSON: {exc.Message}");
-                Console.WriteLine(exc.StackTrace);
-            }
+                var config = File.ReadAllText(_mapConfigPath);
 
-            if (parsedConfig == null)
-            {
-                Console.WriteLine($"[Executes] Failed to parse {fileName}");
-                _mapConfig = null;
-                return false;
-            }
+                MapConfig? parsedConfig = null;
+                try
+                {
+                    parsedConfig = JsonSerializer.Deserialize<MapConfig>(config, Helpers.JsonSerializerOptions);
+                }
+                catch (JsonException exc)
+                {
+                    Console.WriteLine($"[Executes] Failed parsing map config JSON: {exc.Message}");
+                    Console.WriteLine(exc.StackTrace);
+                }
 
-            _mapConfig = parsedConfig;
-            ParseMapConfigIdReferences(_mapConfig);
+                if (parsedConfig == null)
+                {
+                    Console.WriteLine($"[Executes] Failed to parse {fileName}");
+                    _mapConfig = null;
+                    return false;
+                }
+
+                _mapConfig = parsedConfig;
+                ParseMapConfigIdReferences(_mapConfig);
+            }
 
             Console.WriteLine($"-------------------------- Loaded {_mapConfig.Scenarios?.Count} executes config.");
 

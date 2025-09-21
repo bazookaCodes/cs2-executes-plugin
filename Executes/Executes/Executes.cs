@@ -643,7 +643,7 @@ namespace Executes
             var name = commandInfo.GetArg(1);
             var delay = float.Parse(commandInfo.GetArg(2));
 
-            var newGrenade = new Grenade
+            Grenade newGrenade = new Grenade
             {
                 Id = gameManager._mapConfig.Grenades.Count + 1,
                 Name = name,
