@@ -1,12 +1,8 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using CS2MenuManager.API.Menu;
@@ -14,7 +10,6 @@ using Executes.Configs;
 using Executes.Enums;
 using Executes.Managers;
 using Executes.Models;
-using System;
 
 namespace Executes
 {
@@ -634,7 +629,7 @@ namespace Executes
                         {
                             tSpawnMenu.AddItem(spawn.Name, (player, option) =>
                             {
-                                option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Reset;
+                                option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Nothing;
 
                                 gameManager.AddSpawnToScenarioById(scenario.Name, spawn.Id);
 
@@ -674,7 +669,7 @@ namespace Executes
                         {
                             ctSpawnMenu.AddItem(spawn.Name, (player, option) =>
                             {
-                                option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Reset;
+                                option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Nothing;
 
                                 gameManager.AddSpawnToScenarioById(scenario.Name, spawn.Id);
 
@@ -712,7 +707,7 @@ namespace Executes
                     {
                         grenadeMenu.AddItem(grenade.Name, (player, option) =>
                         {
-                            option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Reset;
+                            option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Nothing;
 
                             gameManager.AddGrenadeToScenarioById(scenario.Name, grenade.Id);
 
@@ -1033,7 +1028,6 @@ namespace Executes
         }
 
         [ConsoleCommand("css_throw", "Throws the specified name.")]
-        [CommandHelper(minArgs: 1, usage: "The name of the grenade to throw.")]
         [RequiresPermissions("@css/root")]
         public void OnCommandThrowGrenade(CCSPlayerController? player, CommandInfo commandInfo)
         {
@@ -1042,17 +1036,18 @@ namespace Executes
                 player.ChatMessage("Command only available in debug mode.");
             }
 
-            string grenadeName = commandInfo.ArgString.ToUpper();
-            Grenade? targetGrenade = gameManager._mapConfig.Grenades.Where(g => g.Name.ToUpper() == grenadeName).FirstOrDefault();
+            WasdMenu grenadeMenu = new WasdMenu("Choose Grenade", this);
 
-            if (targetGrenade == null)
+            foreach (Grenade grenade in gameManager._mapConfig.Grenades)
             {
-                commandInfo.ReplyToCommand($"[Executes] No matching grenade found.");
-                return;
+                grenadeMenu.AddItem(grenade.Name, (player, option) =>
+                {
+                    player.ChatMessage($"Throwing grenade {grenade.Name}.");
+                    AddTimer(grenade.Delay, () => grenade.Throw());
+                });
             }
 
-            player.ChatMessage($"Throwing grenade {targetGrenade.Name}.");
-            AddTimer(targetGrenade.Delay, () => targetGrenade.Throw());
+            grenadeMenu.Display(player, 0);
         }
 
         [ConsoleCommand("css_throwclosest", "Throws the closest grenade")]
@@ -1121,8 +1116,7 @@ namespace Executes
             player.ChatMessage($"Showing {count} nades.");
         }
 
-        [ConsoleCommand("css_runscenario", "Runs a specified scenario by ID.")]
-        [CommandHelper(minArgs: 1, usage: "The name of the scenario to run.")]
+        [ConsoleCommand("css_runscenario", "Runs a specified scenario.")]
         [RequiresPermissions("@css/root")]
         public void OnCommandRunScenario(CCSPlayerController? player, CommandInfo commandInfo)
         {
@@ -1132,22 +1126,23 @@ namespace Executes
                 return;
             }
 
-            string scenarioName = commandInfo.ArgString.ToUpper();
-            Scenario? targetScenario = gameManager._mapConfig.Scenarios.Where(s => s.Name.ToUpper() == scenarioName).FirstOrDefault();
+            WasdMenu scenarioMenu = new WasdMenu("Choose Scenario", this);
 
-            if (targetScenario == null)
+            foreach (Scenario scenario in gameManager._mapConfig.Scenarios)
             {
-                commandInfo.ReplyToCommand($"[Executes] No matching scenario found.");
-                return;
+                scenarioMenu.AddItem(scenario.Name, (player, option) =>
+                {
+                    player.ChatMessage($"Executing scenario {scenario.Name}");
+
+                    foreach (Grenade grenade in scenario.Grenades[CsTeam.Terrorist])
+                    {
+                        player.ChatMessage($"Throwing grenade {grenade.Name}.");
+                        AddTimer(grenade.Delay, () => grenade.Throw());
+                    }
+                });
             }
 
-            player.ChatMessage($"Executing scenario {targetScenario.Name}");
-
-            foreach (Grenade grenade in targetScenario.Grenades[CsTeam.Terrorist])
-            {
-                player.ChatMessage($"Throwing grenade {grenade.Name}.");
-                AddTimer(grenade.Delay, () => grenade.Throw());
-            }
+            scenarioMenu.Display(player, 0);
         }
 
         [ConsoleCommand("css_getpos", "Prints the current position to the console")]
