@@ -9,7 +9,7 @@ namespace Executes.Models
 {
     public class Grenade
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string? Name { get; set; }
         public EGrenade Type { get; set; }
         

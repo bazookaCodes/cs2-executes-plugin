@@ -1,12 +1,15 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
+using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using CS2MenuManager.API.Menu;
 using Executes.Configs;
 using Executes.Enums;
 using Executes.Managers;
@@ -113,7 +116,7 @@ namespace Executes
                 EGrenade nadeType = (EGrenade)entity.Entity.DesignerName.DesignerNameToEnum();
 
                 lastGrenade = new Grenade {
-                    Id = 0,
+                    Id = Guid.Empty,
                     Name = "last_grenade",
                     Type = nadeType,
                     Position = position,
@@ -533,6 +536,197 @@ namespace Executes
             player?.ChatMessage($"Dev mode is now {inDevMode}");
         }
 
+        [ConsoleCommand("css_listspawns", "Prints a list of spawns to the console.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandListSpawns(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                return;
+            }
+
+            if (gameManager == null)
+            {
+                commandInfo.ReplyToCommand($"Spawn manager is not loaded.");
+                return;
+            }
+
+            player.PrintToConsole($"[Executes] -------- Spawns ------------");
+            foreach (Spawn spawn in gameManager._mapConfig.Spawns)
+            {
+                player.PrintToConsole($"Side: {spawn.Team} Name: {spawn.Name}");
+            }
+
+            player.PrintToChat($"[Executes] Spawns have been printed to console.");
+        }
+
+        [ConsoleCommand("css_createscenario", "Create an execute scenario.")]
+        [CommandHelper(minArgs: 3, usage: "[Name] [A/B] [Min Players]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandCreateScenario(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run from debug mode.");
+            }
+
+            var scenarioName = commandInfo.GetArg(1);
+            var bombsite = EBombsite.UNKNOWN;
+            var minPlayers = int.Parse(commandInfo.GetArg(3));
+
+            if (commandInfo.GetArg(2) == "A")
+            {
+                bombsite = EBombsite.A;
+            }
+            else
+            {
+                bombsite = EBombsite.B;
+            }
+
+            if (scenarioName == null || scenarioName == "")
+            {
+                commandInfo.ReplyToCommand("You must specify a name for the scenario.");
+                return;
+            }
+
+            Scenario newScenario = new Scenario
+            {
+                Name = scenarioName,
+                Bombsite = bombsite,
+                RoundTime = 90,
+                MinPlayerCount = minPlayers
+            };
+
+            var result = gameManager.AddScenario(newScenario);
+
+            if (result)
+            {
+                commandInfo.ReplyToCommand($"[Executes] Scenario created.");
+            }
+            else
+            {
+                commandInfo.ReplyToCommand($"[Executes] Error creating scenario.");
+            }
+        }
+
+        [ConsoleCommand("css_addtspawntoscenario", "Adds a spawn to a scenario.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandAddTSpawnToScenario(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run from debug mode.");
+                return;
+            }
+
+            WasdMenu scenarioMenu = new WasdMenu("Choose Scenario", this);
+
+            foreach (Scenario scenario in gameManager._mapConfig.Scenarios)
+            {
+                scenarioMenu.AddItem(scenario.Name, (player, option) =>
+                {
+                    WasdMenu tSpawnMenu = new WasdMenu("Choose T Spawns", this);
+
+                    foreach (Spawn spawn in gameManager._mapConfig.Spawns)
+                    {
+                        if (spawn.Team == CsTeam.Terrorist)
+                        {
+                            tSpawnMenu.AddItem(spawn.Name, (player, option) =>
+                            {
+                                option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Reset;
+
+                                gameManager.AddSpawnToScenarioById(scenario.Name, spawn.Id);
+
+                                player.ChatMessage($"Selected option {spawn.Name}");
+                            });
+                        }
+                    }
+
+                    tSpawnMenu.Display(player, 0);
+                });
+            }
+
+            scenarioMenu.Display(player, 0);
+        }
+
+        [ConsoleCommand("css_addctspawntoscenario", "Adds a spawn to a scenario.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandAddCTSpawnToScenario(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run from debug mode.");
+                return;
+            }
+
+            WasdMenu scenarioMenu = new WasdMenu("Choose Scenario", this);
+
+            foreach (Scenario scenario in gameManager._mapConfig.Scenarios)
+            {
+                scenarioMenu.AddItem(scenario.Name, (player, option) =>
+                {
+                    WasdMenu ctSpawnMenu = new WasdMenu("Choose CT Spawns", this);
+
+                    foreach (Spawn spawn in gameManager._mapConfig.Spawns)
+                    {
+                        if (spawn.Team == CsTeam.CounterTerrorist)
+                        {
+                            ctSpawnMenu.AddItem(spawn.Name, (player, option) =>
+                            {
+                                option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Reset;
+
+                                gameManager.AddSpawnToScenarioById(scenario.Name, spawn.Id);
+
+                                player.ChatMessage($"Selected option {spawn.Name}");
+                            });
+                        }
+                    }
+
+                    ctSpawnMenu.Display(player, 0);
+                });
+            }
+
+            scenarioMenu.Display(player, 0);
+        }
+
+        [ConsoleCommand("css_addgrenadetoscenario", "Adds a spawn to a scenario.")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandAddGrenadeToScenario(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode)
+            {
+                commandInfo.ReplyToCommand("Command must be run from debug mode.");
+                return;
+            }
+
+            WasdMenu scenarioMenu = new WasdMenu("Choose Scenario", this);
+
+            foreach (Scenario scenario in gameManager._mapConfig.Scenarios)
+            {
+                scenarioMenu.AddItem(scenario.Name, (player, option) =>
+                {
+                    WasdMenu grenadeMenu = new WasdMenu("Choose Grenades", this);
+
+                    foreach (Grenade grenade in gameManager._mapConfig.Grenades)
+                    {
+                        grenadeMenu.AddItem(grenade.Name, (player, option) =>
+                        {
+                            option.PostSelectAction = CS2MenuManager.API.Enum.PostSelectAction.Reset;
+
+                            gameManager.AddGrenadeToScenarioById(scenario.Name, grenade.Id);
+
+                            player.ChatMessage($"Selected option {grenade.Name}");
+                        });
+                    }
+
+                    grenadeMenu.Display(player, 0);
+                });
+            }
+
+            scenarioMenu.Display(player, 0);
+        }
+
         [ConsoleCommand("css_addspawn", "Creates a new spawn for the bombsite currently shown.")]
         [CommandHelper(minArgs: 2, usage: "[Name] [T/CT]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
         [RequiresPermissions("@css/root")]
@@ -597,7 +791,7 @@ namespace Executes
             }
 
             var newSpawn = new Spawn {
-                Id = gameManager._mapConfig.Spawns.Count + 1,
+                Id = Guid.NewGuid(),
                 Name = name,
                 Position =  player!.PlayerPawn.Value!.AbsOrigin!,
                 Angle = player!.PlayerPawn.Value!.AbsRotation!,
@@ -645,7 +839,7 @@ namespace Executes
 
             Grenade newGrenade = new Grenade
             {
-                Id = gameManager._mapConfig.Grenades.Count + 1,
+                Id = Guid.NewGuid(),
                 Name = name,
                 Type = lastGrenade.Type,
                 Position = lastGrenade.Position,
@@ -935,6 +1129,7 @@ namespace Executes
             if (!inDevMode || !player.IsValidPlayer())
             {
                 player.ChatMessage("Command only available in debug mode.");
+                return;
             }
 
             string scenarioName = commandInfo.ArgString.ToUpper();

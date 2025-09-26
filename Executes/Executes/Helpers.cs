@@ -158,7 +158,7 @@ namespace Executes
 
             var itemServices = new CCSPlayer_ItemServices(player.PlayerPawn.Value.ItemServices.Handle);
             itemServices.HasHelmet = false;
-            itemServices.HasHeavyArmor = false;
+            //itemServices.HasHeavyArmor = false;
         }
 
         public static List<T> Shuffle<T>(IEnumerable<T> list)

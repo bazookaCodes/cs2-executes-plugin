@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using Executes.Configs;
 using Executes.Models;
+using System;
 using System.Text.Json;
 
 namespace Executes.Managers
@@ -38,6 +39,40 @@ namespace Executes.Managers
             // TODO: Add a config option for this logic
             _consecutiveRoundWinsToScramble = 3;
             _isScrambleEnabled = true;
+        }
+
+        public bool AddScenario(Scenario scenario)
+        {
+            _mapConfig ??= new MapConfig();
+
+            if (_mapConfig.Scenarios.Any(existingScenario => existingScenario.Name == scenario.Name))
+            {
+                return false;
+            }
+
+            _mapConfig.Scenarios.Add(scenario);
+
+            SaveSpawns();
+            LoadSpawns();
+
+            return true;
+        }
+
+        public bool RemoveScenario(Scenario scenario)
+        {
+            _mapConfig ??= new MapConfig();
+
+            if (!_mapConfig.Scenarios.Any(existingScenario => existingScenario.Name == scenario.Name))
+            {
+                return false;
+            }
+
+            _mapConfig.Scenarios.Remove(scenario);
+
+            SaveSpawns();
+            LoadSpawns();
+
+            return true;
         }
 
         public bool AddSpawn(Spawn spawn)
@@ -191,6 +226,42 @@ namespace Executes.Managers
             }
         }
 
+        public bool AddSpawnToScenarioById(String? scenarioName, Guid? id)
+        {
+            Scenario scenario = _mapConfig.Scenarios.Where(x => x.Name == scenarioName).FirstOrDefault();
+            Spawn spawn = _mapConfig.Spawns.Where(x => x.Id == id).FirstOrDefault();
+            if (scenario == null || spawn == null)
+            {
+                return false;
+            }
+
+            scenario.SpawnIds.Add(id);
+            scenario.Spawns[spawn.Team].Add(spawn);
+
+            SaveSpawns();
+            LoadSpawns();
+
+            return true;
+        }
+
+        public bool AddGrenadeToScenarioById(String? scenarioName, Guid? id)
+        {
+            Scenario scenario = _mapConfig.Scenarios.Where(x => x.Name == scenarioName).FirstOrDefault();
+            Grenade grenade = _mapConfig.Grenades.Where(x => x.Id == id).FirstOrDefault();
+            if (scenario == null || grenade == null)
+            {
+                return false;
+            }
+
+            scenario.GrenadeIds.Add(id);
+            scenario.Grenades[grenade.Team].Add(grenade);
+
+            SaveSpawns();
+            LoadSpawns();
+
+            return true;
+        }
+
         private MapConfig GetSanitisedMapConfig()
         {
             if (_mapConfig == null)
@@ -286,7 +357,7 @@ namespace Executes.Managers
 
                 foreach (var spawnId in scenario.SpawnIds)
                 {
-                    var spawn = mapConfig.Spawns.First(x => x.Id == spawnId);
+                    var spawn = mapConfig.Spawns.First(x => x.Id.Equals(spawnId));
 
                     // TODO: Figure out why the IDE thinks spawn is never null
                     if (spawn != null)
@@ -306,7 +377,7 @@ namespace Executes.Managers
 
                 foreach (var grenadeId in scenario.GrenadeIds)
                 {
-                    var grenade = mapConfig.Grenades.First(x => x.Id == grenadeId);
+                    var grenade = mapConfig.Grenades.First(x => x.Id.Equals(grenadeId));
 
                     // TODO: Figure out why the IDE thinks grenade is never null
                     if (grenade != null)

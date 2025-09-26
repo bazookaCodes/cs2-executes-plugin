@@ -12,8 +12,8 @@ namespace Executes.Models
         public bool DisableOtherBombsite { get; set; } = true;
         public int RoundTime { get; set; }
         public int MinPlayerCount { get; set; }
-        public HashSet<int> SpawnIds { get; set; } = new();
-        public HashSet<int> GrenadeIds { get; set; } = new();
+        public HashSet<Guid?> SpawnIds { get; set; } = new();
+        public HashSet<Guid?> GrenadeIds { get; set; } = new();
 
         [JsonIgnore]
         public Dictionary<CsTeam, List<Spawn>> Spawns { get; set; } = new();
