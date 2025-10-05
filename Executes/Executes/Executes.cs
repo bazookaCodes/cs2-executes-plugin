@@ -793,7 +793,6 @@ namespace Executes
                 Team = team,
                 Type = ESpawnType.SPAWNTYPE_NORMAL
             };
-            Helpers.ShowSpawn(newSpawn);
 
             var spawnAdded = gameManager.AddSpawn(newSpawn);
             if (spawnAdded)
@@ -843,7 +842,6 @@ namespace Executes
                 Team = lastGrenade.Team,
                 Delay = delay
             };
-            Helpers.ShowNade(newGrenade);
 
             var spawnAdded = gameManager.AddSpawn(newGrenade);
             if (spawnAdded)
@@ -906,25 +904,6 @@ namespace Executes
                 return;
             }
 
-            // Remove the beam entity that is showing for the closest spawn.
-            var beamEntities = Utilities.FindAllEntitiesByDesignerName<CBeam>("beam");
-            foreach (var beamEntity in beamEntities)
-            {
-                if (beamEntity.AbsOrigin == null)
-                {
-                    continue;
-                }
-
-                if (
-                    beamEntity.AbsOrigin.Z - closestSpawn.Position.Z == 0 &&
-                    beamEntity.AbsOrigin.X - closestSpawn.Position.X == 0 &&
-                    beamEntity.AbsOrigin.Y - closestSpawn.Position.Y == 0
-                )
-                {
-                    beamEntity.Remove();
-                }
-            }
-
             var spawnRemoved = gameManager.RemoveSpawn(closestSpawn);
             if (spawnRemoved)
             {
@@ -984,25 +963,6 @@ namespace Executes
             {
                 commandInfo.ReplyToCommand($"No grenades found within 128 units.");
                 return;
-            }
-
-            // Remove the beam entity that is showing for the closest spawn.
-            var beamEntities = Utilities.FindAllEntitiesByDesignerName<CBeam>("beam");
-            foreach (var beamEntity in beamEntities)
-            {
-                if (beamEntity.AbsOrigin == null)
-                {
-                    continue;
-                }
-
-                if (
-                    beamEntity.AbsOrigin.Z - closestGrenade.Position.Z == 0 &&
-                    beamEntity.AbsOrigin.X - closestGrenade.Position.X == 0 &&
-                    beamEntity.AbsOrigin.Y - closestGrenade.Position.Y == 0
-                )
-                {
-                    beamEntity.Remove();
-                }
             }
 
             var spawnRemoved = gameManager.RemoveSpawn(closestGrenade);
@@ -1103,6 +1063,18 @@ namespace Executes
             player.ChatMessage($"Showing {count} spawns.");
         }
 
+        [ConsoleCommand("css_hidespawns", "Removes the spawn visuals")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandHideSpawns(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode || !player.IsValidPlayer())
+            {
+                player.ChatMessage("Command only available in debug mode.");
+            }
+            var count = Helpers.HideSpawns(gameManager._mapConfig.Spawns);
+            player.ChatMessage($"Hid {count} spawns.");
+        }
+
         [ConsoleCommand("css_shownades", "Creates visuals on the map to show all nades.")]
         [RequiresPermissions("@css/root")]
         public void OnCommandShowNades(CCSPlayerController? player, CommandInfo commandInfo)
@@ -1114,6 +1086,19 @@ namespace Executes
 
             var count = Helpers.ShowNades(gameManager._mapConfig.Grenades);
             player.ChatMessage($"Showing {count} nades.");
+        }
+
+        [ConsoleCommand("css_hidenades", "Removes the nade visuals")]
+        [RequiresPermissions("@css/root")]
+        public void OnCommandHideNades(CCSPlayerController? player, CommandInfo commandInfo)
+        {
+            if (!inDevMode || !player.IsValidPlayer())
+            {
+                player.ChatMessage("Command only available in debug mode.");
+            }
+
+            var count = Helpers.HideNades(gameManager._mapConfig.Grenades);
+            player.ChatMessage($"Hid {count} nades.");
         }
 
         [ConsoleCommand("css_runscenario", "Runs a specified scenario.")]

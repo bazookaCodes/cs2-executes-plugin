@@ -194,6 +194,36 @@ namespace Executes
             return spawns.Count;
         }
 
+        public static int HideSpawns(List<Spawn> spawns)
+        {
+            var removeCount = 0;
+
+            foreach (var spawn in spawns)
+            {
+                // Remove the beam entity that is showing for the closest spawn.
+                var beamEntities = Utilities.FindAllEntitiesByDesignerName<CBeam>("beam");
+                foreach (var beamEntity in beamEntities)
+                {
+                    if (beamEntity.AbsOrigin == null)
+                    {
+                        continue;
+                    }
+
+                    if (
+                        beamEntity.AbsOrigin.Z - spawn.Position.Z == 0 &&
+                        beamEntity.AbsOrigin.X - spawn.Position.X == 0 &&
+                        beamEntity.AbsOrigin.Y - spawn.Position.Y == 0
+                    )
+                    {
+                        beamEntity.Remove();
+                        removeCount++;
+                    }
+                }
+            }
+
+            return removeCount;
+        }
+
         public static void ShowSpawn(Spawn spawn)
         {
             var beam = Utilities.CreateEntityByName<CBeam>("beam") ?? throw new Exception("Failed to create beam entity.");
@@ -227,6 +257,36 @@ namespace Executes
             }
 
             return grenades.Count;
+        }
+
+        public static int HideNades(List<Grenade> grenades)
+        {
+            int removedCount = 0;
+
+            foreach (var grenade in grenades)
+            {
+                // Remove the beam entity that is showing for the closest spawn.
+                var beamEntities = Utilities.FindAllEntitiesByDesignerName<CBeam>("beam");
+                foreach (var beamEntity in beamEntities)
+                {
+                    if (beamEntity.AbsOrigin == null)
+                    {
+                        continue;
+                    }
+
+                    if (
+                        beamEntity.AbsOrigin.Z - grenade.Position.Z == 0 &&
+                        beamEntity.AbsOrigin.X - grenade.Position.X == 0 &&
+                        beamEntity.AbsOrigin.Y - grenade.Position.Y == 0
+                    )
+                    {
+                        beamEntity.Remove();
+                        removedCount++;
+                    }
+                }
+            }
+
+            return removedCount;
         }
 
         public static void ShowNade(Grenade grenade)
