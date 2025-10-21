@@ -7,11 +7,6 @@ namespace Executes
 {
     public static class PlayerExtension
     {
-        public static void ChatMessage(this CCSPlayerController player, string message)
-        {
-            player.PrintToChat($"[Executes] {message}");
-        }
-
         public static bool IsValidPlayer(this CCSPlayerController? player)
         {
             return player != null && player.IsValid && player.Connected == PlayerConnectedState.PlayerConnected;

@@ -29,9 +29,10 @@ namespace Executes
         private QueueManager? queueManager;
         #endregion
 
+        public string messagePrefix = "Executes";
+
         private bool inDevMode = false;
         private Grenade? lastGrenade;
-        private string messagePrefix = "Executes";
         private CsTeam lastRoundWinner = CsTeam.None;
 
         public ExecutesConfig Config { get; set; } = new ExecutesConfig();
@@ -65,6 +66,7 @@ namespace Executes
         public void OnConfigParsed(ExecutesConfig config)
         {
             Config = config;
+            messagePrefix = $"{ChatColors.Green}[{Config.ChatMessagePrefix}]{ChatColors.White}";
         }
 
         private void OnMapStart(string map)
@@ -74,7 +76,7 @@ namespace Executes
 
             if (!loaded)
             {
-                Console.WriteLine("[Executes] Failed to load spawns.");
+                Console.WriteLine($" {messagePrefix} Failed to load spawns.");
                 return;
             }
 
@@ -121,7 +123,7 @@ namespace Executes
                     Delay = 0
                 };
 
-                player.ChatMessage(lastGrenade.ToString());
+                player.PrintToChat($" {messagePrefix} {lastGrenade.ToString()}");
 
                 //Replace the grenade since we're in debug mode
                 Helpers.GivePlayerGrenade(player, nadeType);
@@ -132,7 +134,7 @@ namespace Executes
         [GameEventHandler]
         public HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
         {
-            Console.WriteLine("[Executes] EventHandler::OnRoundEnd");
+            Console.WriteLine($"{messagePrefix} EventHandler::OnRoundEnd");
 
             lastRoundWinner = (CsTeam)@event.Winner;
 
@@ -528,7 +530,7 @@ namespace Executes
             Server.ExecuteCommand("mp_warmuptime 120");
             Server.ExecuteCommand("mp_warmup_pausetimer 1");
 
-            player?.ChatMessage($"Dev mode is now {inDevMode}");
+            commandInfo.ReplyToCommand($" {messagePrefix} Dev mode is now {inDevMode}");
         }
 
         [ConsoleCommand("css_listspawns", "Prints a list of spawns to the console.")]
@@ -537,7 +539,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run in debug mode.");
                 return;
             }
 
@@ -553,7 +555,7 @@ namespace Executes
                 player.PrintToConsole($"Side: {spawn.Team} Name: {spawn.Name}");
             }
 
-            player.PrintToChat($"[Executes] Spawns have been printed to console.");
+            commandInfo.ReplyToCommand($" {messagePrefix} Spawns have been printed to console.");
         }
 
         [ConsoleCommand("css_createscenario", "Create an execute scenario.")]
@@ -563,7 +565,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run from debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run from debug mode.");
             }
 
             var scenarioName = commandInfo.GetArg(1);
@@ -581,7 +583,7 @@ namespace Executes
 
             if (scenarioName == null || scenarioName == "")
             {
-                commandInfo.ReplyToCommand("You must specify a name for the scenario.");
+                commandInfo.ReplyToCommand($" {messagePrefix} You must specify a name for the scenario.");
                 return;
             }
 
@@ -597,7 +599,7 @@ namespace Executes
 
             if (result)
             {
-                commandInfo.ReplyToCommand($"[Executes] Scenario created.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Scenario created.");
             }
             else
             {
@@ -611,7 +613,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run from debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run from debug mode.");
                 return;
             }
 
@@ -633,7 +635,7 @@ namespace Executes
 
                                 gameManager.AddSpawnToScenarioById(scenario.Name, spawn.Id);
 
-                                player.ChatMessage($"Selected option {spawn.Name}");
+                                commandInfo.ReplyToCommand($"Selected option {spawn.Name}");
                             });
                         }
                     }
@@ -651,7 +653,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run from debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run from debug mode.");
                 return;
             }
 
@@ -673,7 +675,7 @@ namespace Executes
 
                                 gameManager.AddSpawnToScenarioById(scenario.Name, spawn.Id);
 
-                                player.ChatMessage($"Selected option {spawn.Name}");
+                                commandInfo.ReplyToCommand($"Selected option {spawn.Name}");
                             });
                         }
                     }
@@ -691,7 +693,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run from debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run from debug mode.");
                 return;
             }
 
@@ -711,7 +713,7 @@ namespace Executes
 
                             gameManager.AddGrenadeToScenarioById(scenario.Name, grenade.Id);
 
-                            player.ChatMessage($"Selected option {grenade.Name}");
+                            commandInfo.ReplyToCommand($"Selected option {grenade.Name}");
                         });
                     }
 
@@ -729,7 +731,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run in debug mode.");
                 return;
             }
 
@@ -797,11 +799,11 @@ namespace Executes
             var spawnAdded = gameManager.AddSpawn(newSpawn);
             if (spawnAdded)
             {
-                commandInfo.ReplyToCommand("[Executes] Spawn added.");
+                commandInfo.ReplyToCommand($" {messagePrefix} [Executes] Spawn added.");
             }
             else
             {
-                commandInfo.ReplyToCommand("[Executes] Error adding spawn.");
+                commandInfo.ReplyToCommand($" {messagePrefix} [Executes] Error adding spawn.");
             }
         }
 
@@ -812,7 +814,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run in debug mode.");
                 return;
             }
 
@@ -846,11 +848,11 @@ namespace Executes
             var spawnAdded = gameManager.AddSpawn(newGrenade);
             if (spawnAdded)
             {
-                commandInfo.ReplyToCommand("[Executes] Grenade added.");
+                commandInfo.ReplyToCommand($" {messagePrefix} [Executes] Grenade added.");
             }
             else
             {
-                commandInfo.ReplyToCommand("[Executes] Error adding grenade.");
+                commandInfo.ReplyToCommand($" {messagePrefix} [Executes] Error adding grenade.");
             }
         }
 
@@ -860,7 +862,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run in debug mode.");
                 return;
             }
 
@@ -907,11 +909,11 @@ namespace Executes
             var spawnRemoved = gameManager.RemoveSpawn(closestSpawn);
             if (spawnRemoved)
             {
-                commandInfo.ReplyToCommand("Spawn removed.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Spawn removed.");
             }
             else
             {
-                commandInfo.ReplyToCommand("Error removing spawn.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Error removing spawn.");
             }
         }
 
@@ -921,7 +923,7 @@ namespace Executes
         {
             if (!inDevMode)
             {
-                commandInfo.ReplyToCommand("Command must be run in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command must be run in debug mode.");
                 return;
             }
 
@@ -968,11 +970,11 @@ namespace Executes
             var spawnRemoved = gameManager.RemoveSpawn(closestGrenade);
             if (spawnRemoved)
             {
-                commandInfo.ReplyToCommand("Spawn removed.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Spawn removed.");
             }
             else
             {
-                commandInfo.ReplyToCommand("Error removing spawn.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Error removing spawn.");
             }
         }
 
@@ -982,8 +984,8 @@ namespace Executes
         {
             if (!inDevMode || lastGrenade == null || player == null) return;
 
-            player.ChatMessage("Last grenade:");
-            player.ChatMessage(lastGrenade.ToString());
+            commandInfo.ReplyToCommand($" {messagePrefix} Last grenade:");
+            commandInfo.ReplyToCommand(lastGrenade.ToString());
             AddTimer(lastGrenade.Delay, () => lastGrenade.Throw());
         }
 
@@ -993,7 +995,7 @@ namespace Executes
         {
             if (!inDevMode || !player.IsValidPlayer())
             {
-                player.ChatMessage("Command only available in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command only available in debug mode.");
             }
 
             WasdMenu grenadeMenu = new WasdMenu("Choose Grenade", this);
@@ -1002,7 +1004,7 @@ namespace Executes
             {
                 grenadeMenu.AddItem(grenade.Name, (player, option) =>
                 {
-                    player.ChatMessage($"Throwing grenade {grenade.Name}.");
+                    commandInfo.ReplyToCommand($"Throwing grenade {grenade.Name}.");
                     AddTimer(grenade.Delay, () => grenade.Throw());
                 });
             }
@@ -1016,12 +1018,12 @@ namespace Executes
         {
             if (!inDevMode || !player.IsValidPlayer())
             {
-                player.ChatMessage("Command only available in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command only available in debug mode.");
             }
 
             if (gameManager._mapConfig.Grenades.Count == 0)
             {
-                player.ChatMessage("No grenades exist.");
+                commandInfo.ReplyToCommand($" {messagePrefix} No grenades exist.");
             }
 
             var closestDistance = 9999.9;
@@ -1046,7 +1048,7 @@ namespace Executes
                 return;
             }
 
-            player.ChatMessage($"Throwing grenade {closestNade.Name}.");
+            commandInfo.ReplyToCommand($"Throwing grenade {closestNade.Name}.");
             AddTimer(closestNade.Delay, () => closestNade.Throw());
         }
 
@@ -1056,11 +1058,11 @@ namespace Executes
         {
             if (!inDevMode || !player.IsValidPlayer())
             {
-                player.ChatMessage("Command only available in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command only available in debug mode.");
             }
 
             var count = Helpers.ShowSpawns(gameManager._mapConfig.Spawns);
-            player.ChatMessage($"Showing {count} spawns.");
+            commandInfo.ReplyToCommand($"Showing {count} spawns.");
         }
 
         [ConsoleCommand("css_hidespawns", "Removes the spawn visuals")]
@@ -1069,10 +1071,10 @@ namespace Executes
         {
             if (!inDevMode || !player.IsValidPlayer())
             {
-                player.ChatMessage("Command only available in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command only available in debug mode.");
             }
             var count = Helpers.HideSpawns(gameManager._mapConfig.Spawns);
-            player.ChatMessage($"Hid {count} spawns.");
+            commandInfo.ReplyToCommand($"Hid {count} spawns.");
         }
 
         [ConsoleCommand("css_shownades", "Creates visuals on the map to show all nades.")]
@@ -1081,11 +1083,11 @@ namespace Executes
         {
             if (!inDevMode || !player.IsValidPlayer())
             {
-                player.ChatMessage("Command only available in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command only available in debug mode.");
             }
 
             var count = Helpers.ShowNades(gameManager._mapConfig.Grenades);
-            player.ChatMessage($"Showing {count} nades.");
+            commandInfo.ReplyToCommand($"Showing {count} nades.");
         }
 
         [ConsoleCommand("css_hidenades", "Removes the nade visuals")]
@@ -1094,11 +1096,11 @@ namespace Executes
         {
             if (!inDevMode || !player.IsValidPlayer())
             {
-                player.ChatMessage("Command only available in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command only available in debug mode.");
             }
 
             var count = Helpers.HideNades(gameManager._mapConfig.Grenades);
-            player.ChatMessage($"Hid {count} nades.");
+            commandInfo.ReplyToCommand($"Hid {count} nades.");
         }
 
         [ConsoleCommand("css_runscenario", "Runs a specified scenario.")]
@@ -1107,7 +1109,7 @@ namespace Executes
         {
             if (!inDevMode || !player.IsValidPlayer())
             {
-                player.ChatMessage("Command only available in debug mode.");
+                commandInfo.ReplyToCommand($" {messagePrefix} Command only available in debug mode.");
                 return;
             }
 
@@ -1117,11 +1119,11 @@ namespace Executes
             {
                 scenarioMenu.AddItem(scenario.Name, (player, option) =>
                 {
-                    player.ChatMessage($"Executing scenario {scenario.Name}");
+                    commandInfo.ReplyToCommand($"Executing scenario {scenario.Name}");
 
                     foreach (Grenade grenade in scenario.Grenades[CsTeam.Terrorist])
                     {
-                        player.ChatMessage($"Throwing grenade {grenade.Name}.");
+                        commandInfo.ReplyToCommand($"Throwing grenade {grenade.Name}.");
                         AddTimer(grenade.Delay, () => grenade.Throw());
                     }
                 });
@@ -1136,7 +1138,7 @@ namespace Executes
         {
             if (!player.IsValidPlayer())
             {
-                commandInfo.ReplyToCommand("[Executes] You must be a player to execute this command.");
+                commandInfo.ReplyToCommand($" {messagePrefix} [Executes] You must be a player to execute this command.");
                 return;
             }
 
