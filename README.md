@@ -7,6 +7,36 @@
 2. Extract the Executes folder
 3. Place the folder inside the plugins folder of CSSharp
 
+## Commands
+
+| Command | Arguments | Usage |   
+|---|---|---|
+| !debug | None | Pauses the match and enters editing mode. |   
+| !listspawns | None | Prints a list of spawns to the console. |   
+| !createscenario | [Name] [A/B] [Min Players] | Create an execute scenario. |
+| !addtspawntoscenario | None | Adds a T spawn to a scenario. |  
+| !addctspawntoscenario | None | Adds a CT spawn to a scenario. |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+
+## Development Packages
+[CS2 Menu Manager](https://www.nuget.org/packages/CS2MenuManager)
+
+- Used for creating the grenade menus in the plugin.
+
+[CSSharp API](https://www.nuget.org/packages/CounterStrikeSharp.API)
+
 ## Resources
 
 Guide for setting up a server: https://hub.tcno.co/games/cs2/dedicated_server/
