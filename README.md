@@ -16,19 +16,20 @@
 | !createscenario | [Name] [A/B] [Min Players] | Create an execute scenario. |
 | !addtspawntoscenario | None | Adds a T spawn to a scenario. |  
 | !addctspawntoscenario | None | Adds a CT spawn to a scenario. |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
-|   |   |   |
+| !addgrenadetoscenario | None | Select from a menu a grenade to add to a scenario. |
+| !addspawn | [Name] [T/CT] | Creates a new spawn entry. |
+| !addnade | [Name] [Delay (Seconds)] | Creates a new grenade entry. |
+| !removespawn | None | Use a menu to remove a given spawn entry. |
+| !removenade | None | Use a menu to remove a given grenade entry. |
+| !rethrow | None | Retrhows the most recently thrown grenade. |
+| !throw | None | Pull up a menu to select a grenade to throw. |
+| !throwclosest | None | Throws the closest grenade to current position. |
+| !showspawns | None | Create visual highlights on the map for all spawn positions. |
+| !hidespawns | None | Hides spawn indicators. |
+| !shownades | None | Create visual highlights on the map for all grenade positions. |
+| !hidenades | None | Hides grenade indicators. |
+| !runscenario | None | Use a menu to throw all grenades for a chosen scenario. |
+| !getpos | None | Prints the current position to the console. |
 
 ## Development Packages
 [CS2 Menu Manager](https://www.nuget.org/packages/CS2MenuManager)
