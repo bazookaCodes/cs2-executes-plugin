@@ -31,6 +31,12 @@
 | !runscenario | None | Use a menu to throw all grenades for a chosen scenario. |
 | !getpos | None | Prints the current position to the console. |
 
+## Notes
+
+- Map configs will be automatically created whenever a new map is started. No manual management of the configs needs to happen it will all be done using the menus.
+- !debug will pause the round and enter a permanent warmup phase. All editing needs to be done in this phase.
+
+
 ## Development Packages
 [CS2 Menu Manager](https://www.nuget.org/packages/CS2MenuManager)
 
