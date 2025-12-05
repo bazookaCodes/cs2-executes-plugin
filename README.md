@@ -1,6 +1,10 @@
 # CS2 Executes Plugin
 ### A plugin that allows for custom execute scenarios to be created and saved.
 
+## Contribution
+
+Feel free to send pull requests or just make the code your own. Im happy to merge any contributions anyone wants to make. I do not plan on making any further updates to the plugin.
+
 ## Installation
 
 1. Download the latest release of the plugin
