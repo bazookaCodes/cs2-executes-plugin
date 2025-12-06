@@ -58,12 +58,12 @@ CS Sharp Documentation: https://docs.cssharp.dev/docs/guides/getting-started.htm
 
 [Executes](https://github.com/zwolof/cs2-executes)
 
-- This was the original executes plugin I found and inspired me to get working. 
+- This was the inspiration for me to get started and I'm using much of the round handling and weapons allocation from this plugin.
 
 [Retakes](https://github.com/B3none/cs2-retakes)
 
-- I used a lot of underlying functionality from this really complete plugin.
+- I looked to this plugin for the visual spawn indicators and handling activating warmup mode for the debug menu.
 
 [Matchzy](https://github.com/shobhit-pathak/MatchZy)
 
-- I pulled the grenade throwing system out of this practice plugin.
+- I adapted the grenade spawning and projectile math from the practice mode of this plugin.
