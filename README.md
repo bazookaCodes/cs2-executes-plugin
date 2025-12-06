@@ -7,7 +7,7 @@ Feel free to send pull requests or just make the code your own. Im happy to merg
 
 ## Installation
 
-1. Download the latest release of the plugin
+1. Download the [latest release](https://github.com/bazookaCodes/cs2-executes-plugin/releases/latest) of the plugin
 2. Extract the Executes folder
 3. Place the folder inside the plugins folder of CSSharp
 
