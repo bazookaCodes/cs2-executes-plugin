@@ -19,7 +19,7 @@ namespace Executes
         public override string ModuleName => "Executes";
         public override string ModuleAuthor => "bazooka";
         public override string ModuleDescription => "Executes plugin for CS2.";
-        public override string ModuleVersion => "0.0.1";
+        public override string ModuleVersion => "0.1.0";
         #endregion
 
         #region Managers
@@ -71,7 +71,7 @@ namespace Executes
 
         private void OnMapStart(string map)
         {   
-            gameManager = new GameManager(queueManager, ModuleDirectory, map);
+            gameManager = new GameManager(queueManager, ModuleDirectory, map, Config.RoundWinScrambleEnabled, Config.RoundWinScrambleRounds);
             var loaded = gameManager!.LoadSpawns();
 
             if (!loaded)

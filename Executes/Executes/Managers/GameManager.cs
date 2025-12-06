@@ -30,15 +30,14 @@ namespace Executes.Managers
 
         private bool _scrambleNextRound;
 
-        public GameManager(QueueManager queueManager, string _moduleDirectory, string _map)
+        public GameManager(QueueManager queueManager, string _moduleDirectory, string _map, bool ScrambleEnabled, int ScrambleRounds)
         {
             _queueManager = queueManager;
             moduleDirectory = _moduleDirectory;
             map = _map;
 
-            // TODO: Add a config option for this logic
-            _consecutiveRoundWinsToScramble = 3;
-            _isScrambleEnabled = true;
+            _consecutiveRoundWinsToScramble = ScrambleRounds;
+            _isScrambleEnabled = ScrambleEnabled;
         }
 
         public bool AddScenario(Scenario scenario)
@@ -407,7 +406,6 @@ namespace Executes.Managers
 
         public Scenario GetCurrentScenario()
         {
-            // TODO: Implement this properly
             return _currentScenario ?? throw new Exception("No current scenario");
         }
 

@@ -7,5 +7,11 @@ namespace Executes.Configs
     {
         [JsonPropertyName("ChatMessagePrefix")]
         public string ChatMessagePrefix { get; set; } = "Executes";
+
+        [JsonPropertyName("RoundWinScrambleEnabled")]
+        public bool RoundWinScrambleEnabled { get; set; } = true;
+
+        [JsonPropertyName("RoundWinScrambleRounds")]
+        public int RoundWinScrambleRounds { get; set; } = 3;
     }
 }
